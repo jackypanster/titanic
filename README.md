@@ -1,33 +1,107 @@
-The challenge
-The competition is simple: we want you to use the Titanic passenger data (name, age, price of ticket, etc) to try to predict who will survive and who will die.
+# 泰坦尼克号生存预测
 
-The data
-To take a look at the competition data, click on the Data tab at the top of the competition page. Then, scroll down to find the list of files.
-There are three files in the data: (1) train.csv, (2) test.csv, and (3) gender_submission.csv.
+本项目使用机器学习方法预测泰坦尼克号上乘客的生存情况。通过特征工程和随机森林模型，我们达到了约81%的准确率。
 
-(1) train.csv
-train.csv contains the details of a subset of the passengers on board (891 passengers, to be exact -- where each passenger gets a different row in the table). To investigate this data, click on the name of the file on the left of the screen. Once you've done this, you can view all of the data in the window.
+## 项目结构
 
-The values in the second column ("Survived") can be used to determine whether each passenger survived or not:
+```
+titanic/
+├── data/                    # 数据目录
+│   ├── train.csv           # 训练数据
+│   └── test.csv            # 测试数据
+├── plots/                  # 分析图表
+├── analyze.py              # 数据分析和可视化
+├── main.py                 # 特征工程主程序
+├── train_model.py          # 模型训练和评估
+├── submission.csv          # 预测结果
+└── README.md               # 项目说明
+```
 
-if it's a "1", the passenger survived.
-if it's a "0", the passenger died.
-For instance, the first passenger listed in train.csv is Mr. Owen Harris Braund. He was 22 years old when he died on the Titanic.
+## 特征工程
 
-(2) test.csv
-Using the patterns you find in train.csv, you have to predict whether the other 418 passengers on board (in test.csv) survived.
+我们创建了以下新特征：
 
-Click on test.csv (on the left of the screen) to examine its contents. Note that test.csv does not have a "Survived" column - this information is hidden from you, and how well you do at predicting these hidden values will determine how highly you score in the competition!
+1. **Title**：从姓名中提取头衔（Mr, Mrs, Miss等）
+2. **FamilySize**：家庭成员总数（SibSp + Parch + 1）
+3. **IsAlone**：是否独自一人
+4. **FarePerPerson**：人均票价
+5. **Age**：年龄（使用中位数填充缺失值）
+6. **Deck**：从舱位号提取的甲板信息
+7. **HasCabin**：是否有舱位信息
 
-(3) gender_submission.csv
-The gender_submission.csv file is provided as an example that shows how you should structure your predictions. It predicts that all female passengers survived, and all male passengers died. Your hypotheses regarding survival will probably be different, which will lead to a different submission file. But, just like this file, your submission should have:
+## 模型训练
 
-a "PassengerId" column containing the IDs of each passenger from test.csv.
-a "Survived" column (that you will create!) with a "1" for the rows where you think the passenger survived, and a "0" where you predict that the passenger died.
+### 使用的模型
+- 随机森林分类器（Random Forest Classifier）
+- 使用网格搜索进行超参数调优
 
-But at the end of the day, this gender-based submission bases its predictions on only a single column. As you can imagine, by considering multiple columns, we can discover more complex patterns that can potentially yield better-informed predictions. Since it is quite difficult to consider several columns at once (or, it would take a long time to consider all possible patterns in many different columns simultaneously), we'll use machine learning to automate this for us.
+### 最佳参数
+```python
+{
+    'classifier__max_depth': 10,
+    'classifier__min_samples_leaf': 1,
+    'classifier__min_samples_split': 5,
+    'classifier__n_estimators': 100
+}
+```
 
+### 模型性能
+- 验证集准确率：81.01%
+- 精确率（Precision）：0.81
+- 召回率（Recall）：0.81
+- F1分数：0.81
 
-We'll build what's known as a random forest model. This model is constructed of several "trees" (there are three trees in the picture below, but we'll construct 100!) that will individually consider each passenger's data and vote on whether the individual survived. Then, the random forest model makes a democratic decision: the outcome with the most votes wins!
+## 特征重要性
 
-The code cell below looks for patterns in four different columns ("Pclass", "Sex", "SibSp", and "Parch") of the data. It constructs the trees in the random forest model based on patterns in the train.csv file, before generating predictions for the passengers in test.csv. The code also saves these new predictions in a CSV file submission.csv.
+根据模型分析，最重要的特征依次为：
+
+1. FarePerPerson（人均票价）
+2. Age（年龄）
+3. Sex_female（女性）
+4. Sex_male（男性）
+5. Title_Mr（先生）
+6. FamilySize（家庭规模）
+7. Pclass_3（三等舱）
+8. Title_Miss（小姐）
+9. Pclass_1（一等舱）
+10. Title_Mrs（夫人）
+11. Title_Master（少爷）
+12. Pclass_2（二等舱）
+13. Title_Rare（稀有头衔）
+
+## 如何运行
+
+1. 安装依赖：
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. 运行分析脚本（生成特征分析图表）：
+   ```bash
+   python analyze.py
+   ```
+
+3. 训练模型并生成预测：
+   ```bash
+   python train_model.py
+   ```
+
+4. 预测结果将保存在 `submission.csv` 文件中
+
+## 后续优化方向
+
+1. 尝试其他模型（如XGBoost、LightGBM等）
+2. 进一步优化特征工程
+   - 创建更多交互特征
+   - 尝试不同的分箱策略
+3. 调整模型超参数
+4. 使用集成学习方法
+5. 处理类别不平衡问题
+
+## 贡献
+
+欢迎提交Issue和Pull Request来改进这个项目。
+
+## 许可证
+
+[MIT](LICENSE)
